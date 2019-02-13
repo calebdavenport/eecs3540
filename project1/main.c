@@ -4,43 +4,100 @@
 #include <sys/types.h>
 #include "SHA512.h"
 
+void compressionFunction(unsigned long long block[16]);
 long fsize(const char *filename);
 long messageBlocks(off_t message);
+unsigned long long rightRot(unsigned long long x, unsigned int d);
+unsigned long long ch_function(unsigned long long x,
+                               unsigned long long y,
+                               unsigned long long z);
+unsigned long long maj_function(unsigned long long x,
+                                unsigned long long y,
+                                unsigned long long z);
+unsigned long long sigma_0(unsigned long long x);
+unsigned long long sigma_1(unsigned long long x);
+unsigned long long delta_0(unsigned long long x);
+unsigned long long delta_1(unsigned long long x);
+
+unsigned long long currentHash[8];
 
 int main() {
     char eof = 0;
 	FILE *fp;
-    char block[1024];
-    char buffer[128];
-    unsigned long long currentHash[8];
+    unsigned long long block[16];
 
     for (int i = 0; i < 8; i++) {
         currentHash[i] = initialHash[i];
-        printf("%llx\n", currentHash[i]);
     }
 
 	fp = fopen("test.txt", "rb");
-	printf("TEST\n");
-    printf("0x%lx\n", fsize("test.txt"));
-    printf("0x%lx\n", messageBlocks(111));
     if ( fp != NULL ) {
         int read = 0;
-        while((read = fread(buffer, 1, 128, fp)) > 0) {
+        while((read = fread(block, 8, 16, fp)) > 0) {
             for(int i = 0; i < read; i++) {
                 if (i > 111) {
                     ; // If the message ends above this range, another
                       // block must be made
                 }
-                printf("%c", buffer[i]);
+                printf("%llx\n", block[i]);
             }
-            printf("\n");
-            printf("%x", *buffer);
-            printf("\n---------\n");
+            // printf("%llx", 3);
+            compressionFunction(block);
+            //printf("%llx", compressionFunction(block));
+            //printf("~~~~\n");
+            break; //TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP
+            //printf("%d", block);
+            // printf("\n---------\n");
         }
     }
     fclose(fp);
 
 }
+
+void compressionFunction(unsigned long long block[16]) {
+    unsigned long long w[80];
+    unsigned long long t1;
+    unsigned long long t2;
+    unsigned long long a = currentHash[0];
+    unsigned long long b = currentHash[1];
+    unsigned long long c = currentHash[2];
+    unsigned long long d = currentHash[3];
+    unsigned long long e = currentHash[4];
+    unsigned long long f = currentHash[5];
+    unsigned long long g = currentHash[6];
+    unsigned long long h = currentHash[7];
+    for (int i = 0; i < 16; i++) {
+        w[i] = block[i];
+    }
+    for (int j = 0; j < 80; j++) {
+        if (j >= 16) {
+            w[j] = delta_1(w[j-2]) + w[j-7] + delta_0(w[j-15]) + w[j-16];
+            // printf("%llx\n", w[j]);
+        }
+        t1 = h + sigma_1(e) + ch_function(e, f, g) + constants[j] + w[j];
+        t2 = sigma_0(a) + maj_function(a, b, c);
+        h = g;
+        g = f;
+        f = e;
+        e = d + t1;
+        d = c;
+        c = b;
+        b = a;
+        a = t1 + t2;
+    }
+    //printf("__%llx\n", w[79]);
+    currentHash[0] += a;
+    currentHash[1] += b;
+    currentHash[2] += c;
+    currentHash[3] += d;
+    currentHash[4] += e;
+    currentHash[5] += f;
+    currentHash[6] += g;
+    currentHash[7] += h;
+    //printf("_-_-%llx", currentHash);
+
+}
+
 
 
 // Return the size of the file (in bytes)
@@ -61,30 +118,34 @@ long messageBlocks(off_t message) {
     return (totalSize / 1024) + 1;
 }
 
-long long rightRot(long long x, unsigned int d) {
+unsigned long long rightRot(unsigned long long x, unsigned int d) {
     return (x >> d) | (x << (64 - d));
 }
 
-long long ch_function(long long x, long long y, long long z) {
+unsigned long long ch_function(unsigned long long x,
+                               unsigned long long y,
+                               unsigned long long z) {
     return (x & y) ^ (~x & z);
 }
 
-long long maj_function(long long x, long long y, long long z) {
+unsigned long long maj_function(unsigned long long x,
+                                unsigned long long y,
+                                unsigned long long z) {
     return (x & y) ^ (x & z) ^ (y & z);
 }
 
-long long sigma_0(long long x) {
+unsigned long long sigma_0(unsigned long long x) {
     return rightRot(x, 28) ^ rightRot(x, 34) ^ rightRot(x, 39);
 }
 
-long long sigma_1(long long x) {
+unsigned long long sigma_1(unsigned long long x) {
     return rightRot(x, 14) ^ rightRot(x, 18) ^ rightRot(x, 41);
 }
 
-long long delta_0(long long x) {
+unsigned long long delta_0(unsigned long long x) {
     return rightRot(x, 1) ^ rightRot(x, 8) ^ (x >> 7);
 }
 
-long long delta_1(long long x) {
+unsigned long long delta_1(unsigned long long x) {
     return rightRot(x, 19) ^ rightRot(x, 61) ^ (x >> 6);
 }
