@@ -7,17 +7,6 @@
 void compressionFunction(unsigned long long block[16]);
 long fsize(const char *filename);
 long messageBlocks(off_t message);
-unsigned long long rightRot(unsigned long long x, unsigned int d);
-unsigned long long ch_function(unsigned long long x,
-                               unsigned long long y,
-                               unsigned long long z);
-unsigned long long maj_function(unsigned long long x,
-                                unsigned long long y,
-                                unsigned long long z);
-unsigned long long sigma_0(unsigned long long x);
-unsigned long long sigma_1(unsigned long long x);
-unsigned long long delta_0(unsigned long long x);
-unsigned long long delta_1(unsigned long long x);
 
 static unsigned long long currentHash[8];
 
@@ -123,34 +112,3 @@ long messageBlocks(off_t message) {
     return (totalSize / 1024) + 1;
 }
 
-unsigned long long rightRot(unsigned long long x, unsigned int d) {
-    return (x >> d) | (x << (64 - d));
-}
-
-unsigned long long ch_function(unsigned long long x,
-                               unsigned long long y,
-                               unsigned long long z) {
-    return (x & y) ^ (~x & z);
-}
-
-unsigned long long maj_function(unsigned long long x,
-                                unsigned long long y,
-                                unsigned long long z) {
-    return (x & y) ^ (x & z) ^ (y & z);
-}
-
-unsigned long long sigma_0(unsigned long long x) {
-    return rightRot(x, 28) ^ rightRot(x, 34) ^ rightRot(x, 39);
-}
-
-unsigned long long sigma_1(unsigned long long x) {
-    return rightRot(x, 14) ^ rightRot(x, 18) ^ rightRot(x, 41);
-}
-
-unsigned long long delta_0(unsigned long long x) {
-    return rightRot(x, 1) ^ rightRot(x, 8) ^ (x >> 7);
-}
-
-unsigned long long delta_1(unsigned long long x) {
-    return rightRot(x, 19) ^ rightRot(x, 61) ^ (x >> 6);
-}
