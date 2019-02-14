@@ -19,12 +19,12 @@ unsigned long long sigma_1(unsigned long long x);
 unsigned long long delta_0(unsigned long long x);
 unsigned long long delta_1(unsigned long long x);
 
-unsigned long long currentHash[8];
+static unsigned long long currentHash[8];
 
 int main() {
     char eof = 0;
 	FILE *fp;
-    unsigned long long block[16];
+    static unsigned long long block[16];
 
     for (int i = 0; i < 8; i++) {
         currentHash[i] = initialHash[i];
@@ -33,13 +33,18 @@ int main() {
 	fp = fopen("test.txt", "rb");
     if ( fp != NULL ) {
         int read = 0;
-        while((read = fread(block, 8, 16, fp)) > 0) {
+        char subblock[128];
+        while((read = fread(subblock, 1, 128, fp)) > 0) {
+            printf("%x\n", read);
             for(int i = 0; i < read; i++) {
+                block[i / 8] = block[i / 8] >> 8 * (7 - (i % 8));
+                block[i / 8] += subblock[i];
+                block[i / 8] = block[i / 8] << 8 * (7 - (i % 8));
                 if (i > 111) {
                     ; // If the message ends above this range, another
                       // block must be made
                 }
-                printf("%llx\n", block[i]);
+                printf("%016llx\n", block[i / 8]);
             }
             // printf("%llx", 3);
             compressionFunction(block);
