@@ -4,58 +4,6 @@
 #include <sys/types.h>
 #include "SHA512.h"
 
-void addSubblock(unsigned char subblock[], unsigned long long block[], int i);
-void compressionFunction(unsigned long long block[], unsigned long long currentHash[]);
-long fsize(const char *filename);
-long messageBlocks(off_t message);
-
-int main() {
-	FILE *fp;
-    static unsigned long long block[16];
-    static unsigned long long currentHash[8];
-
-    for (int i = 0; i < 8; i++) {
-        currentHash[i] = initialHash[i];
-    }
-
-	fp = fopen("test.txt", "rb");
-    if ( fp != NULL ) {
-        int read = 0;
-        int M = 0;
-        int currentM = 0;
-        int bit_used = 0;
-        unsigned char subblock[128];
-        M = messageBlocks(fsize("test.txt"));
-        while(currentM < M) {
-            currentM++;
-            read = fread(subblock, 1, 128, fp);
-            memset(block, 0, sizeof(block));
-            if (read == 0x80) {
-                for(int i = 0; i < 128; i++) {
-                    addSubblock(subblock, block, i);
-                }
-                compressionFunction(block, currentHash);
-                continue;
-            }
-            for(int i = 0; i < read; i++) {
-                addSubblock(subblock, block, i);
-            }
-            if (!bit_used) {
-                bit_used = 1;
-                subblock[read] = 0x80;
-                addSubblock(subblock, block, read);
-            }
-            if (currentM == M) {
-                block[15] = (8 * fsize("test.txt"));
-            }
-            compressionFunction(block, currentHash);
-        }
-    }
-    fclose(fp);
-    for (int i; i < 8; i++) {
-        printf("%llx", currentHash[i]);
-    }
-}
 
 void addSubblock(unsigned char subblock[], unsigned long long block[], int i) {
     block[i / 8] = block[i / 8] >> 8 * (7 - (i % 8));
@@ -64,9 +12,7 @@ void addSubblock(unsigned char subblock[], unsigned long long block[], int i) {
 }
 
 void compressionFunction(unsigned long long block[], unsigned long long currentHash[]) {
-    unsigned long long w[80];
-    unsigned long long t1;
-    unsigned long long t2;
+    unsigned long long w[80], t1, t2;
     unsigned long long a = currentHash[0];
     unsigned long long b = currentHash[1];
     unsigned long long c = currentHash[2];
@@ -122,3 +68,47 @@ long messageBlocks(off_t message) {
     off_t totalSize = message + 16 + 1;
     return (totalSize / 128) + 1;
 }
+
+int main() {
+    FILE *fp;
+    static unsigned long long block[16], currentHash[8];
+
+    for (int i = 0; i < 8; i++) {
+        currentHash[i] = initialHash[i];
+    }
+
+    fp = fopen("test4.txt", "rb");
+    if ( fp != NULL ) {
+        int read = 0, M = 0, currentM = 0, bit_used = 0;
+        unsigned char subblock[128];
+        M = messageBlocks(fsize("test4.txt"));
+        for (int currentM = 1; currentM <= M; currentM++) {
+            read = fread(subblock, 1, 128, fp);
+            memset(block, 0, sizeof(block));
+            if (read == 0x80) {
+                for(int i = 0; i < 128; i++) {
+                    addSubblock(subblock, block, i);
+                }
+                compressionFunction(block, currentHash);
+                continue;
+            }
+            for(int i = 0; i < read; i++) {
+                addSubblock(subblock, block, i);
+            }
+            if (!bit_used) {
+                bit_used = 1;
+                subblock[read] = 0x80;
+                addSubblock(subblock, block, read);
+            }
+            if (currentM == M) {
+                block[15] = (8 * fsize("test4.txt"));
+            }
+            compressionFunction(block, currentHash);
+        }
+    }
+    fclose(fp);
+    for (int i = 0; i < 8; i++) {
+        printf("%llx", currentHash[i]);
+    }
+}
+
