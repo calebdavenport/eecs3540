@@ -4,16 +4,15 @@
 #include <sys/types.h>
 #include "SHA512.h"
 
-void compressionFunction(unsigned long long block[16]);
+void addSubblock(unsigned char subblock[], unsigned long long block[], int i);
+void compressionFunction(unsigned long long block[], unsigned long long currentHash[]);
 long fsize(const char *filename);
 long messageBlocks(off_t message);
 
-static unsigned long long currentHash[8];
-
 int main() {
-    char eof = 0;
 	FILE *fp;
     static unsigned long long block[16];
+    static unsigned long long currentHash[8];
 
     for (int i = 0; i < 8; i++) {
         currentHash[i] = initialHash[i];
@@ -22,33 +21,49 @@ int main() {
 	fp = fopen("test.txt", "rb");
     if ( fp != NULL ) {
         int read = 0;
-        char subblock[128];
-        while((read = fread(subblock, 1, 128, fp)) > 0) {
-            printf("%x\n", read);
-            for(int i = 0; i < read; i++) {
-                block[i / 8] = block[i / 8] >> 8 * (7 - (i % 8));
-                block[i / 8] += subblock[i];
-                block[i / 8] = block[i / 8] << 8 * (7 - (i % 8));
-                if (i > 111) {
-                    ; // If the message ends above this range, another
-                      // block must be made
+        int M = 0;
+        int currentM = 0;
+        int bit_used = 0;
+        unsigned char subblock[128];
+        M = messageBlocks(fsize("test.txt"));
+        while(currentM < M) {
+            currentM++;
+            read = fread(subblock, 1, 128, fp);
+            memset(block, 0, sizeof(block));
+            if (read == 0x80) {
+                for(int i = 0; i < 128; i++) {
+                    addSubblock(subblock, block, i);
                 }
-                printf("%016llx\n", block[i / 8]);
+                compressionFunction(block, currentHash);
+                continue;
             }
-            // printf("%llx", 3);
-            compressionFunction(block);
-            //printf("%llx", compressionFunction(block));
-            //printf("~~~~\n");
-            break; //TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP TEMP
-            //printf("%d", block);
-            // printf("\n---------\n");
+            for(int i = 0; i < read; i++) {
+                addSubblock(subblock, block, i);
+            }
+            if (!bit_used) {
+                bit_used = 1;
+                subblock[read] = 0x80;
+                addSubblock(subblock, block, read);
+            }
+            if (currentM == M) {
+                block[15] = (8 * fsize("test.txt"));
+            }
+            compressionFunction(block, currentHash);
         }
     }
     fclose(fp);
-
+    for (int i; i < 8; i++) {
+        printf("%llx", currentHash[i]);
+    }
 }
 
-void compressionFunction(unsigned long long block[16]) {
+void addSubblock(unsigned char subblock[], unsigned long long block[], int i) {
+    block[i / 8] = block[i / 8] >> 8 * (7 - (i % 8));
+    block[i / 8] += subblock[i];
+    block[i / 8] = block[i / 8] << 8 * (7 - (i % 8));
+}
+
+void compressionFunction(unsigned long long block[], unsigned long long currentHash[]) {
     unsigned long long w[80];
     unsigned long long t1;
     unsigned long long t2;
@@ -66,7 +81,6 @@ void compressionFunction(unsigned long long block[16]) {
     for (int j = 0; j < 80; j++) {
         if (j >= 16) {
             w[j] = delta_1(w[j-2]) + w[j-7] + delta_0(w[j-15]) + w[j-16];
-            // printf("%llx\n", w[j]);
         }
         t1 = h + sigma_1(e) + ch_function(e, f, g) + constants[j] + w[j];
         t2 = sigma_0(a) + maj_function(a, b, c);
@@ -79,7 +93,6 @@ void compressionFunction(unsigned long long block[16]) {
         b = a;
         a = t1 + t2;
     }
-    //printf("__%llx\n", w[79]);
     currentHash[0] += a;
     currentHash[1] += b;
     currentHash[2] += c;
@@ -88,8 +101,6 @@ void compressionFunction(unsigned long long block[16]) {
     currentHash[5] += f;
     currentHash[6] += g;
     currentHash[7] += h;
-    //printf("_-_-%llx", currentHash);
-
 }
 
 
@@ -108,7 +119,6 @@ long fsize(const char *filename) {
 // Arguments:
 //     message: length of message (in bytes)
 long messageBlocks(off_t message) {
-    off_t totalSize = (8 * message) + 128 + 1;
-    return (totalSize / 1024) + 1;
+    off_t totalSize = message + 16 + 1;
+    return (totalSize / 128) + 1;
 }
-
