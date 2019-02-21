@@ -66,7 +66,7 @@ long fsize(const char *filename) {
 //     message: length of message (in bytes)
 long messageBlocks(off_t message) {
     off_t totalSize = message + 16 + 1;
-    return (totalSize / 128) + 1;
+    return (totalSize + 127) / 128;
 }
 
 int main() {
