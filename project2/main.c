@@ -19,6 +19,9 @@ void init_FAT() {
     f3 = (unsigned short)(0x4 << 12) | 0x002;
     file_system[4] = (f3 >> 8);
     file_system[5] = (f3 & 0x00FF);
+    for (int i = 6; i < NUM_BLOCKS; i++) {
+        file_system[i] = 0x00;
+    }
 }
 
 void map() {
@@ -37,18 +40,10 @@ void map() {
                 printf("_");
                 break;
         }
-        if (i % 128 == 127) {
+        if (i % 64 == 63) {
             printf("\n");
         }
     }
-    /*
-    printf("%x\n", file_system[0] & 0xF0);
-    printf("%x\n", file_system[1]);
-    printf("%x\n", file_system[2]);
-    printf("%x\n", file_system[3]);
-    printf("%x\n", file_system[4]);
-    printf("%x\n", file_system[5]);
-    */
 }
 
 int main() {
