@@ -8,15 +8,15 @@ unsigned char file_system[BLOCK_SIZE*NUM_BLOCKS];
 
 void init_FAT() {
     unsigned short f1 = (file_system[0] << 8) | file_system[1];
-    f1 = (unsigned short)(0x8 << 12) | 0x000;
+    f1 = (unsigned short)(0x8 << 12) | 0x001;
     file_system[0] = (f1 >> 8);
     file_system[1] = (f1 & 0x00FF);
     unsigned short f2 = (file_system[2] << 8) | file_system[3];
-    f2 = (unsigned short)(0x8 << 12) | 0x001;
+    f2 = (unsigned short)(0x8 << 12) | 0x1FFF;
     file_system[2] = (f2 >> 8);
     file_system[3] = (f2 & 0x00FF);
     unsigned short f3 = (file_system[4] << 8) | file_system[5];
-    f3 = (unsigned short)(0x4 << 12) | 0x002;
+    f3 = (unsigned short)(0x4 << 12) | 0x1FFF;
     file_system[4] = (f3 >> 8);
     file_system[5] = (f3 & 0x00FF);
     for (int i = 6; i < NUM_BLOCKS; i++) {
@@ -26,7 +26,7 @@ void init_FAT() {
 
 void map() {
     for (int i = 0; i < NUM_BLOCKS; i++) {
-        switch (file_system[i * 2] & 0xF0) {
+        switch (file_system[i * 2] & 0xE0) {
             case 0x80:
                 printf("F");
                 break;
