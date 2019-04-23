@@ -47,8 +47,23 @@ void map() {
 }
 
 int main() {
-    init_FAT();
-    map();
+    while(1) {
+        char c;
+        scanf(" %c", &c);
+        switch (c) {
+            case 'm':
+                map();
+                break;
+            case 'i':
+                init_FAT();
+                break;
+            case 'q':
+                return 0;
+                break;
+            default:
+                printf("Unknown Command");
+        }
+    }
     return 0;
 }
 
