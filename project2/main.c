@@ -46,23 +46,21 @@ void map() {
     }
 }
 
-int main() {
-    while(1) {
-        char c;
-        scanf(" %c", &c);
-        switch (c) {
-            case 'm':
-                map();
-                break;
-            case 'i':
-                init_FAT();
-                break;
-            case 'q':
-                return 0;
-                break;
-            default:
-                printf("Unknown Command");
-        }
+
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("No command entered.\n");
+        return 2;
+    }
+    if (strcmp(argv[1], "map") == 0) {
+        printf("Outputting Map");
+        map();
+    } else if (strcmp(argv[1], "format") == 0) {
+        printf("Formatting file system...");
+        init_FAT();
+        printf("done\n");
+    } else {
+        printf("Unknown Command\n");
     }
     return 0;
 }
