@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #define BLOCK_SIZE 4096
 #define NUM_BLOCKS 4096
@@ -46,12 +47,30 @@ void map() {
     }
 }
 
+void output_fs_to_file() {
+    FILE *f = fopen("filesystem", "wb");
+    fwrite(file_system, sizeof(unsigned char), sizeof(file_system), f);
+    fclose(f);
+}
+
+void input_file_to_fs() {
+    if (access("filesystem", F_OK) == -1) {
+        printf("filesystem file not found. Creating...\n");
+        init_FAT();
+        output_fs_to_file();
+    } else {
+        FILE *f = fopen("filesystem", "rb");
+        fread(file_system, sizeof(unsigned char), sizeof(file_system), f);
+        fclose(f);
+    }
+}
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("No command entered.\n");
         return 2;
     }
+    input_file_to_fs();
     if (strcmp(argv[1], "map") == 0) {
         printf("Outputting Map");
         map();
@@ -62,6 +81,7 @@ int main(int argc, char *argv[]) {
     } else {
         printf("Unknown Command\n");
     }
+    output_fs_to_file();
     return 0;
 }
 
