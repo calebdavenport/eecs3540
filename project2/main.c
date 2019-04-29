@@ -20,9 +20,7 @@ void init_FAT() {
     f3 = (unsigned short)(0x4 << 12) | 0x1FFF;
     file_system[4] = (f3 >> 8);
     file_system[5] = (f3 & 0x00FF);
-    for (int i = 6; i < NUM_BLOCKS; i++) {
-        file_system[i] = 0x00;
-    }
+    memset(file_system + 6, 0, 3 * BLOCK_SIZE - 6);
 }
 
 char check_empty_file(int i) {
