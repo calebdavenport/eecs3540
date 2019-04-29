@@ -5,7 +5,7 @@
 #define BLOCK_SIZE 4096
 #define NUM_BLOCKS 4096
 
-unsigned char file_system[BLOCK_SIZE*NUM_BLOCKS];
+char file_system[BLOCK_SIZE*NUM_BLOCKS];
 
 void init_FAT() {
     unsigned short f1 = (file_system[0] << 8) | file_system[1];
@@ -23,6 +23,39 @@ void init_FAT() {
     for (int i = 6; i < NUM_BLOCKS; i++) {
         file_system[i] = 0x00;
     }
+}
+
+char check_empty_file(int i) {
+    for (int j = 0; j < 48; j++) {
+        if (file_system[BLOCK_SIZE * 2 + i + j] != 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void add_file(char *filename, char *file_contents) {
+    int i;
+    for (i = 0; i < BLOCK_SIZE; i = i + 48) {
+        if (check_empty_file(i)) {
+            break;
+        }
+    }
+    strcpy(file_system + BLOCK_SIZE * 2 + i, filename);
+
+    short start_block;
+    for (int j = 0; i < NUM_BLOCKS; j++) {
+        if ((file_system[j * 2] & 0xE0) == 0x00) {
+            start_block = j;
+            file_system[j * 2] = 0x3F;
+            file_system[j * 2 + 1] = 0xFF;
+            break;
+        }
+    }
+    file_system[BLOCK_SIZE * 2 + i + 32] = start_block >> 8;
+    file_system[BLOCK_SIZE * 2 + i + 33] = start_block & 0xFF;
+
+    strcpy(file_system + BLOCK_SIZE * start_block, file_contents);
 }
 
 void map() {
@@ -77,6 +110,14 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(argv[1], "format") == 0) {
         printf("Formatting file system...");
         init_FAT();
+        printf("done\n");
+    } else if (strcmp(argv[1], "write") == 0) {
+        if (argc < 4) {
+            printf("Not enough arguments.\n");
+            return 4;
+        }
+        printf("Adding file...");
+        add_file(argv[2], argv[3]);
         printf("done\n");
     } else {
         printf("Unknown Command\n");
