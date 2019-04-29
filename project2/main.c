@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
     }
     input_file_to_fs();
     if (strcmp(argv[1], "map") == 0) {
-        printf("Outputting Map");
+        printf("Outputting Map...\n");
         map();
     } else if (strcmp(argv[1], "format") == 0) {
         printf("Formatting file system...");
