@@ -64,7 +64,7 @@ void add_file(char *filename, char *file_contents) {
     }
     strcpy(file_system + BLOCK_SIZE * 2 + i, filename);
 
-    short start_block;
+    unsigned long start_block;
     if (match) {
         start_block = read_file(filename);
     } else {
