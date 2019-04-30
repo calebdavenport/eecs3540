@@ -51,7 +51,7 @@ long read_file(char *filename) {
     return -1;
 }
 
-void add_file(char *filename, char *file_contents) {
+void add_file(char *filename, const char *file_contents) {
     int i;
     char match = 0;
     for (i = 0; i < BLOCK_SIZE; i = i + 48) {
@@ -85,7 +85,7 @@ void add_file(char *filename, char *file_contents) {
     strcpy(file_system + start_block, file_contents);
 }
 
-void append_file(char *filename, char *file_contents) {
+void append_file(char *filename, const char *file_contents) {
     int file_block = 0;
     file_block = read_file(filename);
     if (file_block == -1) {
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
             return 4;
         }
         printf("Adding file...");
-        append_file(argv[2], argv[3]);
+        append_file(argv[2], poetry[argv[3]].c_str());
         printf("done\n");
     } else if (strcmp(argv[1], "write") == 0) {
         if (argc < 4) {
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
             return 4;
         }
         printf("Adding file...");
-        add_file(argv[2], argv[3]);
+        add_file(argv[2], poetry[argv[3]].c_str());
         printf("done\n");
     } else {
         printf("Unknown Command\n");
