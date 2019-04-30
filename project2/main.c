@@ -32,6 +32,16 @@ char check_empty_file(int i) {
     return 1;
 }
 
+void read_file(char *filename) {
+    for (int i = 0; i < BLOCK_SIZE; i += 48) {
+        if (strcmp(file_system + 2 * BLOCK_SIZE + i, filename) == 0) {
+            short file_block = (file_system[2 * BLOCK_SIZE + 32 + i] << 8)
+                             | (file_system[2 * BLOCK_SIZE + 33 + i]);
+            printf("%s", file_system + file_block * BLOCK_SIZE);
+        }
+    }
+}
+
 void add_file(char *filename, char *file_contents) {
     int i;
     for (i = 0; i < BLOCK_SIZE; i = i + 48) {
@@ -105,6 +115,14 @@ int main(int argc, char *argv[]) {
     if (strcmp(argv[1], "map") == 0) {
         printf("Outputting Map...\n");
         map();
+    } else if (strcmp(argv[1], "read") == 0) {
+        if (argc < 3) {
+            printf("Not enough arguments.\n");
+            return 8;
+        }
+        printf("Reading file:\n");
+        read_file(argv[2]);
+        printf("\nEOF\n");
     } else if (strcmp(argv[1], "format") == 0) {
         printf("Formatting file system...");
         init_FAT();
