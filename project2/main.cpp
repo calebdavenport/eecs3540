@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include "PoetryMap2.cpp"
 
 #define BLOCK_SIZE 4096
 #define NUM_BLOCKS 4096
@@ -101,7 +102,7 @@ void append_file(char *filename, char *file_contents) {
     }
 }
 
-void map() {
+void print_map() {
     for (int i = 0; i < NUM_BLOCKS; i++) {
         switch (file_system[i * 2] & 0xE0) {
             case 0x80:
@@ -147,9 +148,10 @@ int main(int argc, char *argv[]) {
         return 2;
     }
     input_file_to_fs();
+    map<string, string> poetry = initializePoetry();
     if (strcmp(argv[1], "map") == 0) {
         printf("Outputting Map...\n");
-        map();
+        print_map();
     } else if (strcmp(argv[1], "read") == 0) {
         if (argc < 3) {
             printf("Not enough arguments.\n");
