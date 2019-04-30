@@ -23,6 +23,13 @@ void init_FAT() {
     memset(file_system + 6, 0, 3 * BLOCK_SIZE - 6);
 }
 
+char check_matching_file(int i, char *filename) {
+    if (strcmp(file_system + 2 * BLOCK_SIZE + i, filename) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 char check_empty_file(int i) {
     for (int j = 0; j < 48; j++) {
         if (file_system[BLOCK_SIZE * 2 + i + j] != 0) {
@@ -45,7 +52,12 @@ long read_file(char *filename) {
 
 void add_file(char *filename, char *file_contents) {
     int i;
+    char match = 0;
     for (i = 0; i < BLOCK_SIZE; i = i + 48) {
+        if (check_matching_file(i, filename)) {
+            match = 1;
+            break;
+        }
         if (check_empty_file(i)) {
             break;
         }
@@ -53,18 +65,23 @@ void add_file(char *filename, char *file_contents) {
     strcpy(file_system + BLOCK_SIZE * 2 + i, filename);
 
     short start_block;
-    for (int j = 0; i < NUM_BLOCKS; j++) {
-        if ((file_system[j * 2] & 0xE0) == 0x00) {
-            start_block = j;
-            file_system[j * 2] = 0x3F;
-            file_system[j * 2 + 1] = 0xFF;
-            break;
+    if (match) {
+        start_block = read_file(filename);
+    } else {
+        for (int j = 0; i < NUM_BLOCKS; j++) {
+            if ((file_system[j * 2] & 0xE0) == 0x00) {
+                start_block = j;
+                file_system[j * 2] = 0x3F;
+                file_system[j * 2 + 1] = 0xFF;
+                break;
+            }
         }
+        file_system[BLOCK_SIZE * 2 + i + 32] = start_block >> 8;
+        file_system[BLOCK_SIZE * 2 + i + 33] = start_block & 0xFF;
+        start_block *= BLOCK_SIZE;
     }
-    file_system[BLOCK_SIZE * 2 + i + 32] = start_block >> 8;
-    file_system[BLOCK_SIZE * 2 + i + 33] = start_block & 0xFF;
 
-    strcpy(file_system + BLOCK_SIZE * start_block, file_contents);
+    strcpy(file_system + start_block, file_contents);
 }
 
 void map() {
