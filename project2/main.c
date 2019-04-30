@@ -32,14 +32,15 @@ char check_empty_file(int i) {
     return 1;
 }
 
-void read_file(char *filename) {
+long read_file(char *filename) {
     for (int i = 0; i < BLOCK_SIZE; i += 48) {
         if (strcmp(file_system + 2 * BLOCK_SIZE + i, filename) == 0) {
             short file_block = (file_system[2 * BLOCK_SIZE + 32 + i] << 8)
                              | (file_system[2 * BLOCK_SIZE + 33 + i]);
-            printf("%s", file_system + file_block * BLOCK_SIZE);
+            return ((long)file_block * BLOCK_SIZE);
         }
     }
+    return -1;
 }
 
 void add_file(char *filename, char *file_contents) {
@@ -120,9 +121,13 @@ int main(int argc, char *argv[]) {
             printf("Not enough arguments.\n");
             return 8;
         }
-        printf("Reading file:\n");
-        read_file(argv[2]);
-        printf("\nEOF\n");
+        if (read_file(argv[2]) != -1) {
+            printf("Reading file:\n");
+            printf("%s", file_system + read_file(argv[2]));
+            printf("\nEOF\n");
+        } else {
+            printf("File not found\n");
+        }
     } else if (strcmp(argv[1], "format") == 0) {
         printf("Formatting file system...");
         init_FAT();
