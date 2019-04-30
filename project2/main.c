@@ -84,6 +84,23 @@ void add_file(char *filename, char *file_contents) {
     strcpy(file_system + start_block, file_contents);
 }
 
+void append_file(char *filename, char *file_contents) {
+    int file_block = 0;
+    file_block = read_file(filename);
+    if (file_block == -1) {
+        add_file(filename, file_contents);
+        return;
+    }
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        if (file_system[file_block + i] != 0) {
+            continue;
+        } else {
+            strcpy(file_system + file_block + i, file_contents);
+            break;
+        }
+    }
+}
+
 void map() {
     for (int i = 0; i < NUM_BLOCKS; i++) {
         switch (file_system[i * 2] & 0xE0) {
@@ -148,6 +165,14 @@ int main(int argc, char *argv[]) {
     } else if (strcmp(argv[1], "format") == 0) {
         printf("Formatting file system...");
         init_FAT();
+        printf("done\n");
+    } else if (strcmp(argv[1], "append") == 0) {
+        if (argc < 4) {
+            printf("Not enough arguments.\n");
+            return 4;
+        }
+        printf("Adding file...");
+        append_file(argv[2], argv[3]);
         printf("done\n");
     } else if (strcmp(argv[1], "write") == 0) {
         if (argc < 4) {
